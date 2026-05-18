@@ -141,9 +141,19 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
     if (!canvas || !ctx) return;
 
     const img = new Image();
-    img.src = isSavedImage ? srcString : 'data:image/svg+xml;utf8,' + encodeURIComponent(srcString);
+    
+    // Check if the image source is already a saved drawing, a base64 string, or a PNG asset
+    const isImageFile = isSavedImage || 
+                        srcString.startsWith('data:') || 
+                        srcString.includes('.png') || 
+                        srcString.includes('.jpg') || 
+                        srcString.includes('.jpeg') || 
+                        srcString.includes('.webp') || 
+                        srcString.includes('/assets/');
+
+    img.src = isImageFile ? srcString : 'data:image/svg+xml;utf8,' + encodeURIComponent(srcString);
     img.onload = () => {
-      // SVGs will load with a standard 800x800 size
+      // templates load with a standard 800x800 size
       canvas.width = 800;
       canvas.height = 800;
       
@@ -165,7 +175,14 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
           // If we reopened a saved image, the pristine backup for eraser should still be the initial clean vector outline!
           // We can load the clean vector template into eraser backup.
           const cleanOutlineImg = new Image();
-          cleanOutlineImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(template.svgContent);
+          const isTemplateImageFile = template.svgContent.startsWith('data:') || 
+                                      template.svgContent.includes('.png') || 
+                                      template.svgContent.includes('.jpg') || 
+                                      template.svgContent.includes('.jpeg') || 
+                                      template.svgContent.includes('.webp') || 
+                                      template.svgContent.includes('/assets/');
+                                      
+          cleanOutlineImg.src = isTemplateImageFile ? template.svgContent : 'data:image/svg+xml;utf8,' + encodeURIComponent(template.svgContent);
           cleanOutlineImg.onload = () => {
             origCtx.drawImage(cleanOutlineImg, 0, 0, 800, 800);
           };

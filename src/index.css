@@ -416,11 +416,13 @@ body {
   justify-content: center;
 }
 
-.card-svg-preview svg {
+.card-svg-preview svg,
+.card-svg-preview img {
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
+  object-fit: contain;
 }
 
 /* Template Badges */
@@ -594,11 +596,13 @@ body {
   justify-content: center;
 }
 
-.modal-svg-preview svg {
+.modal-svg-preview svg,
+.modal-svg-preview img {
   max-width: 100%;
   max-height: 100%;
   width: auto;
   height: auto;
+  object-fit: contain;
   filter: drop-shadow(0 8px 16px rgba(0,0,0,0.06));
 }
 

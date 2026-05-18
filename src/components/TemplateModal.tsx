@@ -38,10 +38,13 @@ export const TemplateModal: React.FC<TemplateModalProps> = ({
         
         <div className="modal-grid">
           <div className="modal-preview-side">
-            <div 
-              className="modal-svg-preview"
-              dangerouslySetInnerHTML={{ __html: template.svgContent }}
-            />
+            <div className="modal-svg-preview">
+              {template.svgContent.includes('.png') || template.svgContent.startsWith('data:image/') ? (
+                <img src={template.svgContent} alt={template.title} />
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: template.svgContent }} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+              )}
+            </div>
           </div>
           
           <div className="modal-details-side">

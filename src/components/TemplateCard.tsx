@@ -22,11 +22,14 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onSelect }
       onClick={() => onSelect(template)}
     >
       <div className="card-preview-container">
-        {/* Render the SVG outline inside the card */}
-        <div 
-          className="card-svg-preview"
-          dangerouslySetInnerHTML={{ __html: template.svgContent }}
-        />
+        {/* Render the preview (SVG outline or PNG image) */}
+        <div className="card-svg-preview">
+          {template.svgContent.includes('.png') || template.svgContent.startsWith('data:image/') ? (
+            <img src={template.svgContent} alt={template.title} />
+          ) : (
+            <div dangerouslySetInnerHTML={{ __html: template.svgContent }} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+          )}
+        </div>
         
         {/* Badges */}
         <div className="card-badges">
