@@ -16,27 +16,60 @@ import { ColoringCanvas } from './components/ColoringCanvas';
 import { TEMPLATES } from './data/templates';
 import type { Template } from './data/templates';
 
+export interface Profile {
+  id: string;
+  name: string;
+  avatar: string;
+  stars: number;
+  unlockedTemplates: string[];
+  galleryItems: GalleryItem[];
+}
+
+// Fallback default setup to migrate any single-profile data from older sessions seamlessly
+const getInitialDefaultProfile = (): Profile => {
+  const savedProfileStr = localStorage.getItem('pixipaint_profile');
+  const savedProfile = savedProfileStr ? JSON.parse(savedProfileStr) : { name: 'Little Picasso', avatar: '🦊' };
+  
+  const savedStars = localStorage.getItem('pixipaint_stars');
+  const starsVal = savedStars ? Number(savedStars) : 20;
+
+  const savedUnlockedStr = localStorage.getItem('pixipaint_unlocked');
+  const unlocked = savedUnlockedStr ? JSON.parse(savedUnlockedStr) : [];
+
+  const savedGalleryStr = localStorage.getItem('pixipaint_gallery');
+  const gallery = savedGalleryStr ? JSON.parse(savedGalleryStr) : [];
+
+  return {
+    id: 'profile_default',
+    name: savedProfile.name,
+    avatar: savedProfile.avatar,
+    stars: starsVal,
+    unlockedTemplates: unlocked,
+    galleryItems: gallery,
+  };
+};
+
 function App() {
-  // --- Persistent Kids States ---
-  const [stars, setStars] = useState<number>(() => {
-    const saved = localStorage.getItem('pixipaint_stars');
-    return saved ? Number(saved) : 20; // Start with 20 stars so they can unlock at least one premium template immediately!
+  // --- Persistent Multi-Profile States ---
+  const [activeProfileId, setActiveProfileId] = useState<string>(() => {
+    const saved = localStorage.getItem('pixipaint_active_profile_id');
+    return saved || 'profile_default';
   });
 
-  const [profile, setProfile] = useState<ProfileData>(() => {
-    const saved = localStorage.getItem('pixipaint_profile');
-    return saved ? JSON.parse(saved) : { name: 'Little Picasso', avatar: '🦊' };
+  const [profiles, setProfiles] = useState<Profile[]>(() => {
+    const saved = localStorage.getItem('pixipaint_profiles');
+    if (saved) return JSON.parse(saved);
+    return [getInitialDefaultProfile()];
   });
 
-  const [unlockedTemplates, setUnlockedTemplates] = useState<string[]>(() => {
-    const saved = localStorage.getItem('pixipaint_unlocked');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Derived current active profile configuration
+  const activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0] || getInitialDefaultProfile();
 
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
-    const saved = localStorage.getItem('pixipaint_gallery');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // --- Persistent Reactive States ---
+  const [stars, setStars] = useState<number>(activeProfile.stars);
+  const [profile, setProfile] = useState<ProfileData>({ name: activeProfile.name, avatar: activeProfile.avatar });
+  const [unlockedTemplates, setUnlockedTemplates] = useState<string[]>(activeProfile.unlockedTemplates);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(activeProfile.galleryItems);
 
   // --- UI Routing States ---
   const [activeTab, setActiveTab] = useState<'home' | 'gallery' | 'profile'>('home');
@@ -48,22 +81,27 @@ function App() {
   const [activeSavedImgData, setActiveSavedImgData] = useState<string | undefined>(undefined);
   const [isNewCustomUpload, setIsNewCustomUpload] = useState(false);
 
-  // --- LocalStorage Synchronization ---
+  // Keep the active profile states updated inside the profiles array
   useEffect(() => {
-    localStorage.setItem('pixipaint_stars', stars.toString());
-  }, [stars]);
+    setProfiles(prev => prev.map(p => {
+      if (p.id === activeProfileId) {
+        return {
+          ...p,
+          name: profile.name,
+          avatar: profile.avatar,
+          stars,
+          unlockedTemplates,
+          galleryItems
+        };
+      }
+      return p;
+    }));
+  }, [profile, stars, unlockedTemplates, galleryItems, activeProfileId]);
 
+  // Save profiles array to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('pixipaint_profile', JSON.stringify(profile));
-  }, [profile]);
-
-  useEffect(() => {
-    localStorage.setItem('pixipaint_unlocked', JSON.stringify(unlockedTemplates));
-  }, [unlockedTemplates]);
-
-  useEffect(() => {
-    localStorage.setItem('pixipaint_gallery', JSON.stringify(galleryItems));
-  }, [galleryItems]);
+    localStorage.setItem('pixipaint_profiles', JSON.stringify(profiles));
+  }, [profiles]);
 
   // --- Actions & Handlers ---
   const handleSelectTemplate = (template: Template) => {
@@ -152,6 +190,77 @@ function App() {
     setActiveSavedImgData(imgData);
   };
 
+  const handleSelectProfile = (id: string) => {
+    // 1. First save current state of the active profile to profiles list
+    setProfiles(prev => prev.map(p => {
+      if (p.id === activeProfileId) {
+        return {
+          ...p,
+          stars,
+          name: profile.name,
+          avatar: profile.avatar,
+          unlockedTemplates,
+          galleryItems
+        };
+      }
+      return p;
+    }));
+
+    // 2. Load target profile states
+    const target = profiles.find(p => p.id === id);
+    if (target) {
+      setActiveProfileId(id);
+      setStars(target.stars);
+      setProfile({ name: target.name, avatar: target.avatar });
+      setUnlockedTemplates(target.unlockedTemplates);
+      setGalleryItems(target.galleryItems);
+      localStorage.setItem('pixipaint_active_profile_id', id);
+    }
+  };
+
+  const handleCreateProfile = (name: string, avatar: string) => {
+    const newId = 'profile_' + Date.now();
+    const newProfile: Profile = {
+      id: newId,
+      name: name || 'Super Artist',
+      avatar: avatar || '🦊',
+      stars: 20, // Start new profile with 20 stars
+      unlockedTemplates: [],
+      galleryItems: []
+    };
+    
+    setProfiles(prev => [...prev, newProfile]);
+    
+    // Auto-switch to the newly created profile
+    setActiveProfileId(newId);
+    setStars(newProfile.stars);
+    setProfile({ name: newProfile.name, avatar: newProfile.avatar });
+    setUnlockedTemplates(newProfile.unlockedTemplates);
+    setGalleryItems(newProfile.galleryItems);
+    localStorage.setItem('pixipaint_active_profile_id', newId);
+  };
+
+  const handleDeleteProfile = (id: string) => {
+    if (profiles.length <= 1) {
+      alert("You need to keep at least one profile! 🦊");
+      return;
+    }
+    if (window.confirm("Are you sure you want to delete this profile? All stars and artworks will be lost forever! 🗑️")) {
+      const remaining = profiles.filter(p => p.id !== id);
+      setProfiles(remaining);
+      
+      if (activeProfileId === id) {
+        const nextProfile = remaining[0];
+        setActiveProfileId(nextProfile.id);
+        setStars(nextProfile.stars);
+        setProfile({ name: nextProfile.name, avatar: nextProfile.avatar });
+        setUnlockedTemplates(nextProfile.unlockedTemplates);
+        setGalleryItems(nextProfile.galleryItems);
+        localStorage.setItem('pixipaint_active_profile_id', nextProfile.id);
+      }
+    }
+  };
+
   // --- Render Layout ---
   return (
     <div className="kids-app-container">
@@ -200,6 +309,11 @@ function App() {
                 stars={stars}
                 unlockedCount={unlockedTemplates.length}
                 completedCount={galleryItems.length}
+                profiles={profiles}
+                activeProfileId={activeProfileId}
+                onSelectProfile={handleSelectProfile}
+                onCreateProfile={handleCreateProfile}
+                onDeleteProfile={handleDeleteProfile}
               />
             )}
           </main>
