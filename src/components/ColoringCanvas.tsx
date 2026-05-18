@@ -4,6 +4,7 @@ import type { Template } from '../data/templates';
 interface ColoringCanvasProps {
   template: Template;
   savedImgData?: string;
+  isNewCustomUpload?: boolean;
   onBack: () => void;
   onAddStars: (stars: number) => void;
   onSaveToGallery: (title: string, imgData: string) => void;
@@ -104,9 +105,112 @@ function floodFill(
   ctx.putImageData(imageData, 0, 0);
 }
 
+function convertToSketch(ctx: CanvasRenderingContext2D, width: number, height: number) {
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+  
+  // 1. Convert to Grayscale & Blur slightly to reduce noise
+  const grayscale = new Uint8Array(width * height);
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i+1];
+    const b = data[i+2];
+    grayscale[i / 4] = 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+  
+  // Simple 3x3 Box Blur on Grayscale to reduce photo noise
+  const blurred = new Uint8Array(width * height);
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      let sum = 0;
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          sum += grayscale[(y + ky) * width + (x + kx)];
+        }
+      }
+      blurred[y * width + x] = sum / 9;
+    }
+  }
+  
+  const output = ctx.createImageData(width, height);
+  const outData = output.data;
+  
+  // Sobel Operators
+  const gx = [
+    [-1, 0, 1],
+    [-2, 0, 2],
+    [-1, 0, 1]
+  ];
+  const gy = [
+    [-1, -2, -1],
+    [0, 0, 0],
+    [1, 2, 1]
+  ];
+  
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      let valX = 0;
+      let valY = 0;
+      
+      for (let ky = -1; ky <= 1; ky++) {
+        for (let kx = -1; kx <= 1; kx++) {
+          const pixelVal = blurred[(y + ky) * width + (x + kx)];
+          valX += pixelVal * gx[ky + 1][kx + 1];
+          valY += pixelVal * gy[ky + 1][kx + 1];
+        }
+      }
+      
+      const magnitude = Math.sqrt(valX * valX + valY * valY);
+      
+      // Keep dark outline strokes from original coloring sheet and add detected edges
+      const isEdge = magnitude > 35;
+      const originalIdx = (y * width + x) * 4;
+      const isOriginalDark = data[originalIdx] < 80 && data[originalIdx+1] < 80 && data[originalIdx+2] < 80;
+      
+      const idx = (y * width + x) * 4;
+      if (isEdge || isOriginalDark) {
+        outData[idx] = 0;
+        outData[idx+1] = 0;
+        outData[idx+2] = 0;
+        outData[idx+3] = 255;
+      } else {
+        outData[idx] = 255;
+        outData[idx+1] = 255;
+        outData[idx+2] = 255;
+        outData[idx+3] = 255;
+      }
+    }
+  }
+  
+  // Ensure border pixels are clean white
+  for (let x = 0; x < width; x++) {
+    const topIdx = x * 4;
+    const bottomIdx = ((height - 1) * width + x) * 4;
+    for (let c = 0; c < 3; c++) {
+      outData[topIdx + c] = 255;
+      outData[bottomIdx + c] = 255;
+    }
+    outData[topIdx + 3] = 255;
+    outData[bottomIdx + 3] = 255;
+  }
+  for (let y = 0; y < height; y++) {
+    const leftIdx = (y * width) * 4;
+    const rightIdx = (y * width + width - 1) * 4;
+    for (let c = 0; c < 3; c++) {
+      outData[leftIdx + c] = 255;
+      outData[rightIdx + c] = 255;
+    }
+    outData[leftIdx + 3] = 255;
+    outData[rightIdx + 3] = 255;
+  }
+  
+  ctx.putImageData(output, 0, 0);
+}
+
 export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
   template,
   savedImgData,
+  isNewCustomUpload,
   onBack,
   onAddStars,
   onSaveToGallery,
@@ -117,6 +221,9 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
   const [zoom, setZoom] = useState<number>(1);
   const [showConfetti, setShowConfetti] = useState(false);
   const [celebrationText, setCelebrationText] = useState('');
+
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -129,11 +236,102 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
 
   useEffect(() => {
     if (savedImgData) {
-      loadImageToCanvas(savedImgData, true);
+      if (template.id === 'custom' && isNewCustomUpload) {
+        runCustomSketchScanner(savedImgData);
+      } else {
+        loadImageToCanvas(savedImgData, true);
+      }
     } else {
       loadImageToCanvas(template.svgContent, false);
     }
   }, [template, savedImgData]);
+
+  const runCustomSketchScanner = (imgUrl: string) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d', { willReadFrequently: true });
+    if (!canvas || !ctx) return;
+
+    setIsScanning(true);
+    setScanProgress(0);
+
+    const img = new Image();
+    img.src = imgUrl;
+    img.onload = () => {
+      canvas.width = 800;
+      canvas.height = 800;
+
+      // 1. Create a color canvas to hold the original color photo
+      const colorCanvas = document.createElement('canvas');
+      colorCanvas.width = 800;
+      colorCanvas.height = 800;
+      const colorCtx = colorCanvas.getContext('2d');
+      if (colorCtx) {
+        colorCtx.fillStyle = '#ffffff';
+        colorCtx.fillRect(0, 0, 800, 800);
+        colorCtx.drawImage(img, 0, 0, 800, 800);
+      }
+
+      // 2. Create a sketch canvas to hold the black-and-white outline sketch
+      const sketchCanvas = document.createElement('canvas');
+      sketchCanvas.width = 800;
+      sketchCanvas.height = 800;
+      const sketchCtx = sketchCanvas.getContext('2d', { willReadFrequently: true });
+      if (sketchCtx) {
+        sketchCtx.fillStyle = '#ffffff';
+        sketchCtx.fillRect(0, 0, 800, 800);
+        sketchCtx.drawImage(img, 0, 0, 800, 800);
+        convertToSketch(sketchCtx, 800, 800);
+      }
+
+      // 3. Keep original canvas backup as the sketch for erasing back to outline
+      originalCanvasRef.current = sketchCanvas;
+
+      // 4. Run scanner loop
+      let progress = 0;
+      const scanDuration = 3000; // 3 seconds scan
+      const startTime = performance.now();
+
+      const animateScan = (time: number) => {
+        const elapsed = time - startTime;
+        progress = Math.min(elapsed / scanDuration, 1);
+        setScanProgress(progress);
+
+        ctx.clearRect(0, 0, 800, 800);
+        
+        // Draw sketch outlines first
+        ctx.drawImage(sketchCanvas, 0, 0);
+
+        // Draw color picture below scanline
+        const sy = progress * 800;
+        const sHeight = 800 - sy;
+        if (sHeight > 0) {
+          ctx.drawImage(colorCanvas, 0, sy, 800, sHeight, 0, sy, 800, sHeight);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animateScan);
+        } else {
+          // Scanning complete!
+          setIsScanning(false);
+          
+          ctx.clearRect(0, 0, 800, 800);
+          ctx.drawImage(sketchCanvas, 0, 0);
+
+          historyRef.current = [ctx.getImageData(0, 0, 800, 800)];
+          setCanUndo(false);
+          
+          const phrases = ["Magic Outline Ready! 🪄", "Awesome Sketch! 🎨", "Perfect Outline! 💖"];
+          setCelebrationText(phrases[Math.floor(Math.random() * phrases.length)]);
+          setShowConfetti(true);
+          setTimeout(() => {
+            setShowConfetti(false);
+          }, 3500);
+        }
+      };
+
+      requestAnimationFrame(animateScan);
+    };
+  };
 
   const loadImageToCanvas = (srcString: string, isSavedImage: boolean) => {
     const canvas = canvasRef.current;
@@ -259,6 +457,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
   };
 
   const handleStart = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (isScanning) return;
     if (!('touches' in e)) {
       // Prevent running on right-click
       if (e.button !== 0) return;
@@ -291,6 +490,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
   };
 
   const handleMove = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (isScanning) return;
     if ('touches' in e) {
       // Multi-touch zooming/panning is skipped to keep coloring robust on touchscreens
     } else {
@@ -338,6 +538,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
   };
 
   const handleMouseLeave = () => {
+    if (isScanning) return;
     setMousePos(null);
     stopDrawing();
   };
@@ -443,7 +644,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
       )}
 
       {/* Top Workspace Header Controls */}
-      <div className="coloring-top-controls">
+      <div className={`coloring-top-controls ${isScanning ? 'disabled-toolbar-overlay' : ''}`}>
         <button className="back-home-btn bouncy-btn" onClick={onBack}>
           👈 Back to Studio
         </button>
@@ -467,7 +668,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
       <div className="coloring-main-body">
         
         {/* Playful Floating Toolbar */}
-        <div className="coloring-toolbar">
+        <div className={`coloring-toolbar ${isScanning ? 'disabled-toolbar-overlay' : ''}`}>
           <button 
             className={`tool-btn ${tool === 'fill' ? 'active' : ''}`}
             onClick={() => setTool('fill')}
@@ -480,7 +681,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
           <button 
             className={`tool-btn ${tool === 'brush' ? 'active' : ''}`}
             onClick={() => setTool('brush')}
-            title="Paint Brush (Draw lines)"
+            title="Magic Brush (Draw lines)"
           >
             <span className="tool-emoji">🖌️</span>
             <span className="tool-name">Magic Brush</span>
@@ -532,7 +733,7 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
         <div className="canvas-wrapper-outer">
           
           {/* Zoom and Pan indicators */}
-          <div className="canvas-floating-zoom-panel">
+          <div className={`canvas-floating-zoom-panel ${isScanning ? 'disabled-toolbar-overlay' : ''}`}>
             <button onClick={handleZoomOut} className="zoom-btn" title="Zoom Out">➖</button>
             <span onClick={handleZoomReset} className="zoom-label" title="Reset Zoom">
               {Math.round(zoom * 100)}%
@@ -541,28 +742,45 @@ export const ColoringCanvas: React.FC<ColoringCanvasProps> = ({
           </div>
 
           <div className="canvas-viewport">
-            <canvas 
-              ref={canvasRef}
-              onMouseDown={handleStart}
-              onMouseMove={handleMove}
-              onMouseUp={stopDrawing}
-              onMouseLeave={handleMouseLeave}
-              onTouchStart={handleStart}
-              onTouchMove={handleMove}
-              onTouchEnd={stopDrawing}
-              style={{ 
-                width: `${zoom * 100}%`, 
-                height: 'auto', 
-                cursor: tool === 'fill' ? 'crosshair' : 'none'
-              }}
-            />
+            <div className="canvas-container-inner" style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }}>
+              <canvas 
+                ref={canvasRef}
+                onMouseDown={handleStart}
+                onMouseMove={handleMove}
+                onMouseUp={stopDrawing}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={handleStart}
+                onTouchMove={handleMove}
+                onTouchEnd={stopDrawing}
+                style={{ 
+                  width: `${zoom * 100}%`, 
+                  height: 'auto', 
+                  cursor: tool === 'fill' ? 'crosshair' : 'none'
+                }}
+              />
+              {isScanning && (
+                <div className="sketch-scanner-overlay">
+                  <div className="scanner-line" style={{ top: `${scanProgress * 100}%` }} />
+                  <div className="scanner-laser-glow" style={{ top: `${scanProgress * 100}%` }} />
+                </div>
+              )}
+              {isScanning && (
+                <div className="scanner-active-modal-indicator">
+                  <h3>🪄 Magic Scanner</h3>
+                  <p>Converting picture into a clean sketch coloring page... 🎨</p>
+                  <div style={{ marginTop: '0.8rem', fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                    {Math.round(scanProgress * 100)}%
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
       </div>
 
       {/* Yummy Color Palette Grid */}
-      <div className="palette-wrapper-bar">
+      <div className={`palette-wrapper-bar ${isScanning ? 'disabled-toolbar-overlay' : ''}`}>
         <h4 className="palette-title">🎨 Pick a Beautiful Color:</h4>
         <div className="coloring-color-palette">
           {COLORS.map((color) => (

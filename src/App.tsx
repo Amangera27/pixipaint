@@ -46,6 +46,7 @@ function App() {
   // --- Active Coloring States ---
   const [activeColoringTemplate, setActiveColoringTemplate] = useState<Template | null>(null);
   const [activeSavedImgData, setActiveSavedImgData] = useState<string | undefined>(undefined);
+  const [isNewCustomUpload, setIsNewCustomUpload] = useState(false);
 
   // --- LocalStorage Synchronization ---
   useEffect(() => {
@@ -146,6 +147,7 @@ function App() {
       difficulty: 'Medium',
       svgContent: '', // Empty SVG, since loadImageToCanvas will load base64 direct
     };
+    setIsNewCustomUpload(true);
     setActiveColoringTemplate(customTemplate);
     setActiveSavedImgData(imgData);
   };
@@ -158,9 +160,11 @@ function App() {
         <ColoringCanvas
           template={activeColoringTemplate}
           savedImgData={activeSavedImgData}
+          isNewCustomUpload={isNewCustomUpload}
           onBack={() => {
             setActiveColoringTemplate(null);
             setActiveSavedImgData(undefined);
+            setIsNewCustomUpload(false);
           }}
           onAddStars={handleAddStars}
           onSaveToGallery={handleSaveToGallery}
