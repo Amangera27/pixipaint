@@ -1960,3 +1960,221 @@ body {
   from { transform: scale(0.85); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* --- Kid Portal Main Menu Dashboard Styles --- */
+.portal-dashboard-wrapper {
+  margin: 2.5rem 0;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.portal-welcome-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  text-align: center;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.portal-welcome-subtitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-dark);
+  opacity: 0.8;
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.portal-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 2.5rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.portal-zone-card {
+  background: white;
+  border: var(--border-thick);
+  border-radius: 32px;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-comic);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.portal-zone-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 0 var(--color-dark);
+}
+
+/* Drawing Book Card Styling (Special Gradients for Premium Look) */
+.card-drawing-book {
+  background: linear-gradient(135deg, #ffffff 60%, rgba(255, 202, 212, 0.4) 100%);
+}
+
+.card-drawing-book:hover {
+  background: linear-gradient(135deg, #ffffff 60%, rgba(255, 202, 212, 0.7) 100%);
+}
+
+.card-photo-scanner {
+  background: linear-gradient(135deg, #ffffff 60%, rgba(181, 226, 250, 0.4) 100%);
+  cursor: default; /* Scanner handles label clicking instead */
+}
+
+.zone-card-emoji-container {
+  width: 100px;
+  height: 100px;
+  background: var(--color-bg-light);
+  border: var(--border-thick);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-comic-small);
+  transform: rotate(-5deg);
+  transition: transform 0.3s ease;
+}
+
+.portal-zone-card:hover .zone-card-emoji-container {
+  transform: scale(1.1) rotate(10deg);
+}
+
+.zone-emoji {
+  font-size: 3.5rem;
+  user-select: none;
+}
+
+.zone-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.zone-badge {
+  background: var(--color-primary);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 800;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-pill);
+  border: var(--border-thin);
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accent-badge {
+  background: var(--color-success);
+}
+
+.zone-card-content h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  margin-bottom: 0.8rem;
+}
+
+.zone-card-content p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-dark);
+  opacity: 0.85;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  flex-grow: 1;
+}
+
+.zone-action-btn {
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  background: var(--color-accent);
+  color: var(--color-dark);
+  border: var(--border-thick);
+  border-radius: var(--radius-pill);
+  padding: 0.8rem 1.8rem;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-comic-small);
+  transition: all 0.2s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.portal-zone-card:hover .zone-action-btn {
+  background: #ffc43d;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-comic-small);
+}
+
+.portal-zone-card:active .zone-action-btn {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+/* Template Library Outlines View Styles */
+.library-outlines-wrapper {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.library-header-row {
+  border-bottom: var(--border-thick);
+  padding-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.library-back-btn {
+  background: var(--color-primary-soft);
+  color: var(--color-dark);
+  font-weight: 800;
+  font-size: 1.05rem;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-comic-small);
+  transition: all 0.2s ease;
+}
+
+.library-back-btn:hover {
+  background: #ffb3c1;
+  transform: translateY(-2px);
+}
+
+.library-back-btn:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.library-header-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .portal-welcome-title {
+    font-size: 1.8rem;
+  }
+  .portal-welcome-subtitle {
+    margin-bottom: 1.5rem;
+  }
+  .portal-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+    padding: 0 1rem;
+  }
+  .portal-zone-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
