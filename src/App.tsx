@@ -11,6 +11,7 @@ import { ProfileTab } from './components/ProfileTab';
 import type { ProfileData } from './components/ProfileTab';
 import { TemplateModal } from './components/TemplateModal';
 import { ColoringCanvas } from './components/ColoringCanvas';
+import { ColorGame } from './components/ColorGame';
 
 // Data
 import { TEMPLATES } from './data/templates';
@@ -80,6 +81,7 @@ function App() {
   const [activeColoringTemplate, setActiveColoringTemplate] = useState<Template | null>(null);
   const [activeSavedImgData, setActiveSavedImgData] = useState<string | undefined>(undefined);
   const [isNewCustomUpload, setIsNewCustomUpload] = useState(false);
+  const [isColorGameActive, setIsColorGameActive] = useState(false);
 
   // Keep the active profile states updated inside the profiles array
   useEffect(() => {
@@ -278,6 +280,11 @@ function App() {
           onAddStars={handleAddStars}
           onSaveToGallery={handleSaveToGallery}
         />
+      ) : isColorGameActive ? (
+        <ColorGame
+          onBack={() => setIsColorGameActive(false)}
+          onEarnStars={handleAddStars}
+        />
       ) : (
         /* 2. Main Responsive Tabs Dashboard */
         <>
@@ -289,6 +296,7 @@ function App() {
               <HomeTab
                 onSelectTemplate={handleSelectTemplate}
                 onCustomUpload={handleCustomUpload}
+                onStartColorGame={() => setIsColorGameActive(true)}
               />
             )}
 

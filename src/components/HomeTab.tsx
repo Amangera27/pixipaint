@@ -6,11 +6,12 @@ import { TemplateCard } from './TemplateCard';
 interface HomeTabProps {
   onSelectTemplate: (template: Template) => void;
   onCustomUpload: (imgData: string, title: string) => void;
+  onStartColorGame: () => void;
 }
 
 const CATEGORIES = ['All', 'Animals', 'Space', 'Fantasy', 'Cute'];
 
-export const HomeTab: React.FC<HomeTabProps> = ({ onSelectTemplate, onCustomUpload }) => {
+export const HomeTab: React.FC<HomeTabProps> = ({ onSelectTemplate, onCustomUpload, onStartColorGame }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
@@ -119,6 +120,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({ onSelectTemplate, onCustomUplo
                   Upload & Scan 📸 ➔
                   <input type="file" accept="image/png, image/jpeg" onChange={handleImageUpload} style={{ display: 'none' }} />
                 </label>
+              </div>
+            </div>
+
+            {/* Zone 3: Colour Guess Game */}
+            <div 
+              className="portal-zone-card card-color-game bouncy-btn" 
+              onClick={onStartColorGame}
+            >
+              <div className="zone-card-emoji-container">
+                <span className="zone-emoji">🎮🌈</span>
+              </div>
+              <div className="zone-card-content">
+                <div className="zone-badge game-badge">Play & Earn 10 Stars ⭐</div>
+                <h3>Colour Guess Game</h3>
+                <p>Beat the 3-second timer and answer 6 magical color mixing questions to win 10 shiny stars! 🌟⏰</p>
+                <div className="zone-action-btn">
+                  Play Game 🎮 ➔
+                </div>
               </div>
             </div>
           </div>

@@ -2178,3 +2178,431 @@ body {
   }
 }
 
+/* Card Color Game styling in Dashboard Grid */
+.card-color-game {
+  background: linear-gradient(135deg, #ffffff 60%, rgba(255, 209, 102, 0.4) 100%);
+}
+
+.card-color-game:hover {
+  background: linear-gradient(135deg, #ffffff 60%, rgba(255, 209, 102, 0.7) 100%);
+}
+
+.game-badge {
+  background: var(--color-secondary);
+}
+
+/* Fullscreen Overlay for the Game */
+.color-game-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(45, 42, 74, 0.75);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+  padding: 1.5rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.color-game-container {
+  width: 100%;
+  max-width: 600px;
+  perspective: 1000px;
+}
+
+.color-game-card {
+  background: white;
+  border: var(--border-thick);
+  border-radius: 36px;
+  box-shadow: 0 16px 0 var(--color-dark);
+  padding: 2.5rem;
+  position: relative;
+  animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Game Intro Styling */
+.game-intro-emoji {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: jumpBounce 2s infinite ease-in-out;
+}
+
+@keyframes jumpBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+.game-subtitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.game-rules-box {
+  background: var(--color-bg-light);
+  border: var(--border-thin);
+  border-radius: var(--radius-bubble);
+  padding: 1.2rem 1.8rem;
+  width: 100%;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.game-rules-box h4 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  margin-bottom: 0.5rem;
+}
+
+.game-rules-box ul {
+  padding-left: 1.2rem;
+  font-weight: 600;
+  color: var(--color-dark);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.intro-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+.intro-actions button, .popup-actions button {
+  flex: 1;
+}
+
+/* Playing Screen Layout */
+.game-playing-card {
+  align-items: stretch;
+}
+
+.game-playing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.game-step-badge {
+  background: var(--color-dark);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-pill);
+}
+
+.game-exit-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.game-exit-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Countdown Timer Styling */
+.game-timer-container {
+  position: relative;
+  background: var(--color-gray-soft);
+  border: var(--border-thin);
+  height: 32px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-timer-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  transition: width 0.05s linear, background-color 0.2s ease;
+}
+
+.game-timer-text {
+  position: relative;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--color-dark);
+  text-shadow: 1px 1px 0 white;
+  z-index: 5;
+}
+
+.game-question-text {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Visual color combos row */
+.game-color-combo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.game-color-bubble {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-comic-small);
+}
+
+.game-combo-plus, .game-combo-equals {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-dark);
+}
+
+.bubble-question-mark {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  animation: pulseQuestion 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulseQuestion {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
+/* Options buttons list */
+.game-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.game-option-btn {
+  background: white;
+  border: var(--border-thick);
+  border-radius: var(--radius-bubble);
+  padding: 1rem 1.5rem;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-dark);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-comic-small);
+  transition: all 0.2s ease;
+}
+
+.game-option-btn:hover:not(:disabled) {
+  background: var(--color-bg-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-comic-small);
+}
+
+.option-letter {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  border-radius: 8px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Special choice classes */
+.game-option-btn.btn-correct {
+  background: #d8f3dc;
+  border-color: var(--color-success);
+  color: #1b4332;
+  box-shadow: 0 4px 0 var(--color-success);
+}
+.game-option-btn.btn-correct .option-letter {
+  background: #b7e4c7;
+  color: var(--color-success);
+}
+
+.game-option-btn.btn-wrong {
+  background: #ffe3e3;
+  border-color: #ff4d6d;
+  color: #590d22;
+  box-shadow: 0 4px 0 #ff4d6d;
+  animation: shakeBtn 0.4s ease-in-out;
+}
+.game-option-btn.btn-wrong .option-letter {
+  background: #ffccd5;
+  color: #ff4d6d;
+}
+
+.game-option-btn.btn-disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@keyframes shakeBtn {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* Wrong/Timeout Popup screen card */
+.popup-emoji {
+  font-size: 4.5rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: wobbleEmoji 1.5s infinite ease-in-out;
+}
+
+@keyframes wobbleEmoji {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.popup-motivational {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-dark);
+  opacity: 0.85;
+  margin-bottom: 1.5rem;
+}
+
+.explanation-bubble {
+  background: #ffeef2;
+  border: 3px solid #ffcad4;
+  border-radius: var(--radius-bubble);
+  padding: 1.2rem 1.8rem;
+  width: 100%;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.explanation-bubble h4 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ff4d6d;
+  margin-bottom: 0.4rem;
+}
+
+.explanation-bubble p {
+  font-weight: 600;
+  color: var(--color-dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Game Won screen */
+.won-emoji {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  animation: cheer 0.6s infinite alternate cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cheer {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-20px) scale(1.1); }
+}
+
+.won-congrats {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-dark);
+  opacity: 0.9;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.reward-chest {
+  background: #fff9e6;
+  border: 3px solid #ffe8a3;
+  border-radius: 28px;
+  padding: 1.5rem;
+  width: 100%;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-comic-small);
+}
+
+.reward-stars-animation {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  animation: rotateStars 4s infinite linear;
+}
+
+@keyframes rotateStars {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+.reward-chest h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffb703;
+  margin-bottom: 0.4rem;
+}
+
+.reward-chest p {
+  font-weight: 600;
+  color: var(--color-dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.claim-btn {
+  font-size: 1.2rem;
+  padding: 0.9rem 2.5rem;
+  width: 100%;
+}
+
+/* Adjustments for game card grids in smaller mobile screens */
+@media (max-width: 480px) {
+  .color-game-card {
+    padding: 1.5rem;
+  }
+  .game-color-bubble {
+    width: 48px;
+    height: 48px;
+  }
+  .game-combo-plus, .game-combo-equals {
+    font-size: 1.2rem;
+  }
+  .game-option-btn {
+    font-size: 1rem;
+    padding: 0.8rem 1rem;
+  }
+}
+
+
