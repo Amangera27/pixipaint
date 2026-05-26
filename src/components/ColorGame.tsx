@@ -65,7 +65,7 @@ export const ColorGame: React.FC<ColorGameProps> = ({ onBack, onEarnStars }) => 
   const [timeLeft, setTimeLeft] = useState(3.0); // 3 seconds total with decimals for smooth animation
   const [wrongExplanation, setWrongExplanation] = useState('');
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Starts the timer for each question
   useEffect(() => {

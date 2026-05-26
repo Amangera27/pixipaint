@@ -24,7 +24,7 @@ export const DrawingTemplatePage: React.FC<DrawingTemplatePageProps> = ({ onSele
   return (
     <div className="library-outlines-wrapper">
       {/* Back button to go back to dashboard */}
-      <div className="library-header-row" style={{ display: 'flex', alignItems: 'center', justifySpace: 'between', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div className="library-header-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem' }}>
         <button 
           className="library-back-btn bouncy-btn control-btn-pill" 
           onClick={onBack}
